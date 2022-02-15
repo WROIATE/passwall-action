@@ -1,0 +1,27 @@
+name: Build Passwall
+
+env:
+  REPO_URL: https://github.com/xiaorouji/openwrt-passwall/trunk/luci-app-passwall
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+
+      - name: Build ipk file
+        run: |
+          svn co ${{ env.REPO_URL }}
+          fakeroot bash make.sh luci-app-passwall
+          echo "ASSET_NAME=$(ls *.ipk)" >> $GITHUB_ENV
+
+      - name: Upload ipk file
+        uses: actions/upload-artifact@main
+        with:
+          name: ${{ env.ASSET_NAME }}
+          path: ./*.ipk
