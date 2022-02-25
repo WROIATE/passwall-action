@@ -12,6 +12,15 @@ TEMP_DIR="$(mktemp -d -p $PKG_DIR)"
 TEMP_PKG_DIR="$TEMP_DIR/$PKG_NAME"
 mkdir -p "$TEMP_PKG_DIR/CONTROL/"
 mkdir -p "$TEMP_PKG_DIR/usr/lib/lua/luci/"
+CONFFILES="/etc/config/passwall_server
+/usr/share/passwall/rules/direct_host
+/usr/share/passwall/rules/direct_ip
+/usr/share/passwall/rules/proxy_host
+/usr/share/passwall/rules/proxy_ip
+/usr/share/passwall/rules/block_host
+/usr/share/passwall/rules/block_ip
+/usr/share/passwall/rules/lanlist_ipv4
+/usr/share/passwall/rules/lanlist_ipv6"
 
 function get_mk_value() {
     awk -F "$1:=" '{print $2}' "$PKG_DIR/Makefile" | xargs
@@ -25,7 +34,7 @@ PKG_VERSION="$(get_mk_value "PKG_VERSION")-$(get_mk_value "PKG_RELEASE")"
 cp -fpR "$PKG_DIR/luasrc"/* "$TEMP_PKG_DIR/usr/lib/lua/luci/"
 cp -fpR "$PKG_DIR/root"/* "$TEMP_PKG_DIR/"
 
-echo -e "/etc/config/passwall_server" >"$TEMP_PKG_DIR/CONTROL/conffiles"
+echo -e "$CONFFILES" >"$TEMP_PKG_DIR/CONTROL/conffiles"
 
 cat >"$TEMP_PKG_DIR/CONTROL/control" <<-EOF
 	Package: $PKG_NAME
