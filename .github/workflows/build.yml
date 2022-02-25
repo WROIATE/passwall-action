@@ -18,7 +18,7 @@ jobs:
         run: |
           svn co ${{ env.REPO_URL }}
           fakeroot bash make.sh luci-app-passwall
-          echo "ASSET_NAME=$(ls *.ipk)" >> $GITHUB_ENV
+          echo "ASSET_NAME=$(ls *.ipk | sed 's/_all.ipk//g')" >> $GITHUB_ENV
 
       - name: Upload ipk file
         uses: actions/upload-artifact@main
