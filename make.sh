@@ -3,36 +3,29 @@
 export PKG_SOURCE_DATE_EPOCH="$(date "+%s")"
 
 BASE_DIR=$(
-    cd $(dirname $0)
-    pwd
+	cd $(dirname $0)
+	pwd
 )
 PKG_NAME="$1"
 PKG_DIR="$BASE_DIR/$1"
 TEMP_DIR="$(mktemp -d -p $PKG_DIR)"
 TEMP_PKG_DIR="$TEMP_DIR/$PKG_NAME"
+CONFFILES="$(cat $PKG_DIR/Makefile | sed -n '/define Package\/\$(PKG_NAME)\/conffiles/,/endef/p' | sed '/define/d' | sed '/endef/d' | sed '/passwall$/d')"
 mkdir -p "$TEMP_PKG_DIR/CONTROL/"
 mkdir -p "$TEMP_PKG_DIR/usr/lib/lua/luci/"
-CONFFILES="/etc/config/passwall_server
-/usr/share/passwall/rules/direct_host
-/usr/share/passwall/rules/direct_ip
-/usr/share/passwall/rules/proxy_host
-/usr/share/passwall/rules/proxy_ip
-/usr/share/passwall/rules/block_host
-/usr/share/passwall/rules/block_ip
-/usr/share/passwall/rules/lanlist_ipv4
-/usr/share/passwall/rules/lanlist_ipv6"
 
 function get_mk_value() {
-    awk -F "$1:=" '{print $2}' "$PKG_DIR/Makefile" | xargs
+	awk -F "$1:=" '{print $2}' "$PKG_DIR/Makefile" | xargs
 }
 
 function get_mk_depends() {
-    echo $(cat $PKG_DIR/Makefile | grep -o '\+.*' | sed 's/\\//g' | sed ':a;N;s/\n//g;ta' | sed 's/[[:space:]]+/,/g' | sed 's\+\\g' | sed 's/PACKAGE_$(PKG_NAME)\w*://g')
+	echo $(cat $PKG_DIR/Makefile | grep -o '\+.*' | sed 's/\\//g' | sed ':a;N;s/\n//g;ta' | sed 's/[[:space:]]+/,/g' | sed 's\+\\g' | sed 's/PACKAGE_$(PKG_NAME)\w*://g' | sed 's/[[:space:]]//g')
 }
 
 PKG_VERSION="$(get_mk_value "PKG_VERSION")-$(get_mk_value "PKG_RELEASE")"
 cp -fpR "$PKG_DIR/luasrc"/* "$TEMP_PKG_DIR/usr/lib/lua/luci/"
 cp -fpR "$PKG_DIR/root"/* "$TEMP_PKG_DIR/"
+touch "$TEMP_PKG_DIR/etc/config/passwall" && chmod 0666 "$TEMP_PKG_DIR/etc/config/passwall"
 
 echo -e "$CONFFILES" >"$TEMP_PKG_DIR/CONTROL/conffiles"
 
